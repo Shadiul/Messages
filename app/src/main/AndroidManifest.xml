@@ -11,12 +11,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".SettingsActivity"></activity>
+
+        <activity
+            android:name=".StatusActivity"
+            android:parentActivityName=".SettingsActivity" />
+
+        <activity android:name=".SettingsActivity" />
+
         <activity android:name=".LoginActivity" />
+
         <activity
             android:name=".RegisterActivity"
             android:parentActivityName=".StartActivity" />
+
         <activity android:name=".StartActivity" />
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

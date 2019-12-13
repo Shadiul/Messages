@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mToolbar;
 
     private ViewPager mViewPager;
-    private  SectionsPagerAdapter mSectionsPagerAdapter;
+    private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private TabLayout mTabLayout;
 
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             sendToStart();
 
         }
-        if (item.getItemId() == R.id.main_settings_btn){
+        if (item.getItemId() == R.id.main_settings_btn) {
             Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(settingsIntent);
         }

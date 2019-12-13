@@ -22,4 +22,6 @@
     <string name="hi_i_am_using_messenger">Hi i am using Messenger</string>
     <string name="change_image">Change Image</string>
     <string name="change_status">change status</string>
+    <string name="your_status">Your Status</string>
+    <string name="save_changes">Save Changes</string>
 </resources>
