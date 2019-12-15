@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -29,9 +30,15 @@ import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -83,8 +90,12 @@ public class SettingsActivity extends AppCompatActivity {
                 mName.setText(name);
                 mStatus.setText(status);
 
-                //https://square.github.io/picasso/
-                Picasso.get().load(image).into(mDisplayImage);
+                if (!image.equals("default")) {
+
+                    //https://square.github.io/picasso/
+                    Picasso.get().load(image).placeholder(R.drawable.man).into(mDisplayImage);
+                }
+
             }
 
             @Override
@@ -126,7 +137,7 @@ public class SettingsActivity extends AppCompatActivity {
     //https://github.com/ArthurHub/Android-Image-Cropper
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == GALLERY_PICK && resultCode == RESULT_OK) {
@@ -155,9 +166,27 @@ public class SettingsActivity extends AppCompatActivity {
 
                 final Uri resultUri = result.getUri();
 
+                final File thumb_filepath = new File(resultUri.getPath());
+
                 String current_user_id = mCurrentUser.getUid();
+                Bitmap bitmap = null;
+
+                try {
+                    bitmap = new Compressor(this)
+                            .setMaxHeight(200)
+                            .setMaxWidth(200)
+                            .setQuality(75)
+                            .compressToBitmap(thumb_filepath);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                final byte[] thumb_byte = baos.toByteArray();
 
                 final StorageReference filepath = mImageStorage.child("profile_images").child(current_user_id + ".jpg");
+                final StorageReference thumb_path = mImageStorage.child("profile_images").child("thumbs").child(current_user_id + ".jpg");
 
                 UploadTask uploadTask = filepath.putFile(resultUri);
 
@@ -178,16 +207,51 @@ public class SettingsActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
 
                             Uri downloadUri = task.getResult();
-                            String download_url = downloadUri.toString();
+                            final String download_url = downloadUri.toString();
 
-                            mUserDatabase.child("image").setValue(download_url).addOnCompleteListener(new OnCompleteListener<Void>() {
+
+                            UploadTask uploadTask1 = thumb_path.putBytes(thumb_byte);
+
+                            Task<Uri> thumbUrlTask = uploadTask1.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                                 @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
+                                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
 
-                                        mProgressDialog.dismiss();
-                                        Toast.makeText(SettingsActivity.this, "Success Uploading", Toast.LENGTH_LONG).show();
+                                    if (!task.isSuccessful()) {
+                                        throw task.getException();
                                     }
+
+                                    return thumb_path.getDownloadUrl();
+                                }
+                            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Uri> task) {
+
+                                    if (task.isSuccessful()) {
+                                        Uri thumbDownloadUri = task.getResult();
+                                        String thumb_downloadUrl = thumbDownloadUri.toString();
+
+                                        Map update_hashMap = new HashMap<>();
+                                        update_hashMap.put("image", download_url);
+                                        update_hashMap.put("thumb_image", thumb_downloadUrl);
+
+                                        mUserDatabase.updateChildren(update_hashMap).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+
+                                                    mProgressDialog.dismiss();
+                                                    Toast.makeText(SettingsActivity.this, "Success Uploading", Toast.LENGTH_LONG).show();
+                                                }
+                                            }
+                                        });
+
+
+                                    } else {
+
+                                        Toast.makeText(SettingsActivity.this, "Error in uploading thumbnail", Toast.LENGTH_LONG).show();
+                                        mProgressDialog.dismiss();
+                                    }
+
                                 }
                             });
 
