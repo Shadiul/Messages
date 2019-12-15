@@ -93,7 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (!image.equals("default")) {
 
                     //https://square.github.io/picasso/
-                    Picasso.get().load(image).placeholder(R.drawable.man).into(mDisplayImage);
+                    Picasso.get().load(image).placeholder(R.drawable.default_avatar).into(mDisplayImage);
                 }
 
             }

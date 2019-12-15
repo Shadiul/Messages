@@ -123,7 +123,7 @@ public class UsersActivity extends AppCompatActivity {
 
             CircleImageView imageView = mView.findViewById(R.id.user_single_image);
 
-            Picasso.get().load(thumb_image).placeholder(R.drawable.man).into(imageView);
+            Picasso.get().load(thumb_image).placeholder(R.drawable.default_avatar).into(imageView);
 
         }
     }
