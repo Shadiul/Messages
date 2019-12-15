@@ -6,6 +6,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,6 +30,8 @@ public class UsersActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private RecyclerView mUsersList;
 
+    private ProgressDialog mProgressDialog;
+
     private DatabaseReference mUsersDatabase;
 
     @Override
@@ -40,6 +43,12 @@ public class UsersActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("All Users");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setTitle("Loading User Data");
+        mProgressDialog.setMessage("Please wait while we load the user data.");
+        mProgressDialog.setCanceledOnTouchOutside(false);
+        mProgressDialog.show();
 
         mUsersDatabase = FirebaseDatabase.getInstance().getReference().child("Users");
 
@@ -67,6 +76,7 @@ public class UsersActivity extends AppCompatActivity {
                 holder.setDisplayName(model.getName());
                 holder.setUserStatus(model.getStatus());
                 holder.setUserImage(model.getThumb_image(), getApplicationContext());
+                mProgressDialog.dismiss();
 
                 final String user_id = getRef(position).getKey();
 
